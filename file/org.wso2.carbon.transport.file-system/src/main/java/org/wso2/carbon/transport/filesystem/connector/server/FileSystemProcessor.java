@@ -73,7 +73,12 @@ class FileSystemProcessor implements Runnable {
     @Override
     public void run() {
         TextCarbonMessage message = new TextCarbonMessage(file.getName().getURI());
-        message.setProperty(org.wso2.carbon.messaging.Constants.PROTOCOL, Constants.PROTOCOL_FILE_SYSTEM);
+        try {
+            message.setProperty(org.wso2.carbon.messaging.Constants.PROTOCOL, file.getURL().getProtocol());
+        } catch (FileSystemException e) {
+            logger.error("Exception occurred while retrieving the file protocol");
+            message.setProperty(org.wso2.carbon.messaging.Constants.PROTOCOL, Constants.PROTOCOL_FILE_SYSTEM);
+        }
         message.setProperty(Constants.FILE_TRANSPORT_PROPERTY_SERVICE_NAME, serviceName);
         boolean processFailed = false;
         FileSystemServerConnectorCallback callback = new FileSystemServerConnectorCallback();
@@ -104,7 +109,7 @@ class FileSystemProcessor implements Runnable {
                 fileSystemConsumer.postProcess(file, processFailed);
             } catch (FileSystemServerConnectorException e) {
                 logger.error("File object '" + FileTransportUtils.maskURLPassword(file.getName().toString()) + "' " +
-                             "cloud not be moved", e);
+                                     "could not be moved", e);
             }
         }
 
